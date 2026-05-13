@@ -3,17 +3,6 @@ import { AudioInputApi } from "../audio/audio-input";
 import { DataBroker } from "../streams/broker";
 import { DataProducer } from "../streams/producer";
 
-export type SketchMeta = {
-    id: string;
-    name: string;
-    status: 'publish' | 'draft';
-    permissions: {
-        microphone?: boolean;
-    }
-    tags: string[];
-}
-
-// Sketch Context
 export type SketchRole = 'generator' | 'consumer'
 
 export type SketchEventApi = {
