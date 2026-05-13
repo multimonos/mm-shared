@@ -12,5 +12,9 @@
   },
   "devDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "p5": "^2.2.3",
+    "standardized-audio-context": "^25.3.77"
   }
 }

@@ -1,2 +1,4 @@
 export * from "./streams/broker"
 export * from "./streams/producer"
+export * from "./audio/audio-input"
+export * from "./sketch/types"
