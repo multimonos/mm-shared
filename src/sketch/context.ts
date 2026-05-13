@@ -7,11 +7,11 @@ import { DataProducer } from "../streams/producer";
 type BaseSketchContext = {
     p5: typeof P5;
     canvas: HTMLElement;
-    notify: SketchEventApi;
+    notify: SketchNotifier;
     audio?: AudioInputApi;
 }
 
-export type SketchEventApi = {
+export type SketchNotifier = {
     loaded: ( p: P5 ) => void;
     ended: ( p: P5 ) => void;
 }
