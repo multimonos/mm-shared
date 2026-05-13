@@ -1,5 +1,5 @@
 {
-  "name": "multimonos/shared",
+  "name": "@multimonos/shared",
   "version": "1.0.0",
   "description": "Shared logic and types for DataBroker, DataProducers, and Sinks",
   "type": "module",
