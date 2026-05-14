@@ -107,7 +107,7 @@ export interface Decoded<T extends ArrayBufferView = ArrayBufferView> {
     format: Format
     stride: number
     step: number
-    data: T
+    bytes: T
 }
 
 export function decode<T extends ArrayBufferView>( buf: ArrayBufferView ): Decoded<T> | null {
