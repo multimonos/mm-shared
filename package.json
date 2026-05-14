@@ -8,10 +8,11 @@
   "types": "./src/index.ts",
   "license": "UNLICENSED",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx vitest --config vitest.config.ts --disable-console-intercept"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.6"
   },
   "dependencies": {
     "p5": "^2.2.3",
