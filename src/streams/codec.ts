@@ -3,6 +3,7 @@ const VERSION: Version = 1
 
 export type Version = 1
 
+
 export enum Format {
     // raw int
     raw_u8 = 0x1,
@@ -48,18 +49,17 @@ const CONFIG: Record<Format, {
     [Format.vec3_u16]: { stride: 6, size: 2, ctor: Uint16Array },
 }
 
+export type CodeData = Uint8Array | Uint16Array | Float32Array
+
 export function strideFor( format: Format ): number {
     return CONFIG[format].stride || 1
 }
 
-export function isU16Format( f: Format ) {
-
-}
 
 /**
  * Packs an ArrayBufferView with 1-word header.
  */
-export function pack( format: Format, data: ArrayBufferView ): Uint8Array {
+export function pack( format: Format, data: CodeData ): Uint8Array {
     // allocate new memory to add header
     const pkg = new Uint8Array( HEADER_SIZE + data.byteLength )
 
@@ -78,13 +78,13 @@ export function pack( format: Format, data: ArrayBufferView ): Uint8Array {
 /**
  * Unpacks the header and provides a zero-copy subarray of the data
  */
-export interface Unpacked {
+export interface UnpackedData {
     format: Format
     stride: number
     bytes: Uint8Array
 }
 
-export function unpack( data: ArrayBufferView ): Unpacked | null {
+export function unpack( data: ArrayBufferView ): UnpackedData | null {
     if ( data.byteLength < HEADER_SIZE ) return null;
 
     // zero-copy
@@ -103,14 +103,14 @@ export function unpack( data: ArrayBufferView ): Unpacked | null {
 /**
  * decodes and unpacks the buffer and returns values for easy iteration
  */
-export interface Decoded<T extends ArrayBufferView = ArrayBufferView> {
+export interface DecodedData<T extends CodeData = CodeData> {
     format: Format
     stride: number
     step: number
-    bytes: T
+    data: T
 }
 
-export function decode<T extends ArrayBufferView>( buf: ArrayBufferView ): Decoded<T> | null {
+export function decode<T extends ArrayBufferView>( buf: ArrayBufferView ): DecodedData<T> | null {
 
     const unpacked = unpack( buf )
     if ( ! unpacked ) return null;
@@ -122,27 +122,27 @@ export function decode<T extends ArrayBufferView>( buf: ArrayBufferView ): Decod
     if ( ! conf ) return null;
 
     const data = new conf.ctor(
-        bytes.buffer,
+        bytes.buffer as ArrayBuffer,
         bytes.byteOffset,
         bytes.byteLength / conf.size
-    ) as T
+    ) as unknown as T
 
     return {
         format,
         stride: conf.stride,
         step: conf.stride / conf.size,
-        bytes: data
+        data
     }
 }
 
-export function decodeU8( buf: ArrayBufferView ): Decoded<Uint8Array> | null {
+export function decodeU8( buf: ArrayBufferView ): DecodedData<Uint8Array> | null {
     return decode<Uint8Array>( buf )
 }
 
-export function decodeU16( buf: ArrayBufferView ): Decoded<Uint16Array> | null {
+export function decodeU16( buf: ArrayBufferView ): DecodedData<Uint16Array> | null {
     return decode<Uint16Array>( buf )
 }
 
-export function decodeF32( buf: ArrayBufferView ): Decoded<Float32Array> | null {
+export function decodeF32( buf: ArrayBufferView ): DecodedData<Float32Array> | null {
     return decode<Float32Array>( buf )
 }

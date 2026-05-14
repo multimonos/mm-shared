@@ -99,12 +99,12 @@ describe( 'Codec', () => {
 
         it( 'vec2_u8 ( with decode )', () => {
             const packed = pack( Format.vec2_u8, new Uint8Array( vals ) )
-            const { bytes, stride, step } = decode<Uint8Array>( packed )
+            const { data, stride, step } = decode<Uint8Array>( packed )
             assert.strictEqual( stride, 2 )
 
             let n = 0;
-            for ( let i = 0; i < bytes.length; i += step ) {
-                const vec2 = bytes.subarray( i, i + step )
+            for ( let i = 0; i < data.length; i += step ) {
+                const vec2 = data.subarray( i, i + step )
                 const [ x, y ] = vec2
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
@@ -115,14 +115,14 @@ describe( 'Codec', () => {
             const packed = pack( Format.vec2_u16, new Uint16Array( vals ) )
 
             // convenience fn
-            const { bytes, stride, step } = decodeU16( packed )
+            const { data, stride, step } = decodeU16( packed )
 
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < bytes.length; i += step ) {
-                const x = bytes[i]
-                const y = bytes[i + 1]
+            for ( let i = 0; i < data.length; i += step ) {
+                const x = data[i]
+                const y = data[i + 1]
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
             }
@@ -132,14 +132,14 @@ describe( 'Codec', () => {
             const packed = pack( Format.vec2_u16, new Uint16Array( vals ) )
 
             // manual
-            const { bytes, stride, step } = decode<Uint16Array>( packed )
+            const { data, stride, step } = decode<Uint16Array>( packed )
 
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < bytes.length; i += step ) {
-                const x = bytes[i]
-                const y = bytes[i + 1]
+            for ( let i = 0; i < data.length; i += step ) {
+                const x = data[i]
+                const y = data[i + 1]
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
             }
@@ -148,15 +148,15 @@ describe( 'Codec', () => {
         it( 'vec3_u16 ( generic )', () => {
             const packed = pack( Format.vec3_u16, new Uint16Array( vals ) )
 
-            const { bytes, stride, step } = decode<Uint16Array>( packed )
+            const { data, stride, step } = decode<Uint16Array>( packed )
 
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < bytes.length; i += step ) {
-                const x = bytes[i]
-                const y = bytes[i + 1]
-                const z = bytes[i + 2]
+            for ( let i = 0; i < data.length; i += step ) {
+                const x = data[i]
+                const y = data[i + 1]
+                const z = data[i + 2]
                 assert.deepEqual( v3[n], [ x, y, z ] )
                 n++
             }

@@ -11,7 +11,7 @@
     "allowJs": true,
     "checkJs": false,
     "esModuleInterop": true,
-    "skipLibCheck": true,     // Prevents library type conflicts
+    "skipLibCheck": false,     // Prevents library type conflicts
     "isolatedModules": true,   // Vital for Vite/SvelteKit compatibility
     "types": ["vitest/globals"]
   },
