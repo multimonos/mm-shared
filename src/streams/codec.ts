@@ -49,7 +49,7 @@ const CONFIG: Record<Format, {
     [Format.vec3_u16]: { stride: 6, size: 2, ctor: Uint16Array },
 }
 
-export type CodeData = Uint8Array | Uint16Array | Float32Array
+export type CodecData = Uint8Array | Uint16Array | Float32Array
 
 export function strideFor( format: Format ): number {
     return CONFIG[format].stride || 1
@@ -59,7 +59,7 @@ export function strideFor( format: Format ): number {
 /**
  * Packs an ArrayBufferView with 1-word header.
  */
-export function pack( format: Format, data: CodeData ): Uint8Array {
+export function pack( format: Format, data: CodecData ): Uint8Array {
     // allocate new memory to add header
     const pkg = new Uint8Array( HEADER_SIZE + data.byteLength )
 
@@ -103,14 +103,14 @@ export function unpack( data: ArrayBufferView ): UnpackedData | null {
 /**
  * decodes and unpacks the buffer and returns values for easy iteration
  */
-export interface DecodedData<T extends CodeData = CodeData> {
+export interface DecodedData<T extends CodecData = CodecData> {
     format: Format
     stride: number
     step: number
     data: T
 }
 
-export function decode<T extends ArrayBufferView>( buf: ArrayBufferView ): DecodedData<T> | null {
+export function decode<T extends CodecData>( buf: ArrayBufferView ): DecodedData<T> | null {
 
     const unpacked = unpack( buf )
     if ( ! unpacked ) return null;
