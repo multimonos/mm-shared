@@ -82,9 +82,9 @@ export function pack( format: Format, data: CodecData ): Uint8Array {
 }
 
 /**
- * Unpacks the header and provides a zero-copy subarray of the data
+ * Discards the header and returns a zero-copy subarray of the data
  *
- * Bytes -> UnpackedData
+ * Bytes -> Uint8Array
  */
 export type CodecLayout = {
     format?: Format;
@@ -92,7 +92,7 @@ export type CodecLayout = {
     step?: number;
 }
 
-export function unpack( bytes: ArrayBufferView, layout: CodecLayout = {} ): Uint8Array | null {
+export function unpack( bytes: ArrayBufferView, layout?: CodecLayout ): Uint8Array | null {
     if ( bytes.byteLength < HEADER_SIZE ) return null;
 
     // zero-copy
@@ -103,10 +103,11 @@ export function unpack( bytes: ArrayBufferView, layout: CodecLayout = {} ): Uint
     const conf = CodecConfig[view[1] as Format]
     if ( ! conf ) return null;
 
-
-    layout.format = view[1] as Format
-    layout.stride = conf.stride
-    layout.step = conf.step
+    if ( layout ) {  // cut this out with a SCAVENGER default for layout
+        layout.format = view[1] as Format
+        layout.stride = conf.stride
+        layout.step = conf.step
+    }
 
     return view.subarray( HEADER_SIZE )
 }
@@ -116,22 +117,29 @@ export function unpack( bytes: ArrayBufferView, layout: CodecLayout = {} ): Uint
  * Decodes and unpacks the buffer and returns values for easy iteration
  * buf -> CodecData
  */
-export function decode<T extends CodecData>( buf: ArrayBufferView, layout: CodecLayout = {} ): T | null {
+export function decode<T extends CodecData>( buf: ArrayBufferView, layout?: CodecLayout ): T | null {
 
     // unpack
-    const ulayout: CodecLayout = {}
-    const bytes = unpack( buf, ulayout )
+    const bytes = unpack( buf )
     if ( ! bytes ) return null;
 
+    // We know buf[1] is safe because unpack succeeded.
+    // We cast to Uint8Array once to get fast index access.
+    const view = buf instanceof Uint8Array
+        ? buf
+        : new Uint8Array( buf.buffer, buf.byteOffset ); // Skipe length bounds check here ( no bytes.byteLength ).
+    const format = view[1] as Format;
+
     // get the spec
-    // const { format, bytes } = unpacked
-    const conf = CodecConfig[ulayout.format]
+    const conf = CodecConfig[format]
     if ( ! conf ) return null;
 
     // meta
-    layout.format = conf.format
-    layout.stride = conf.stride
-    layout.step = conf.step
+    if ( layout ) {  // cut this out with a SCAVENGER default for layout
+        layout.format = conf.format
+        layout.stride = conf.stride
+        layout.step = conf.step
+    }
 
     // create memory view
     const data = new conf.ctor(
@@ -143,29 +151,42 @@ export function decode<T extends CodecData>( buf: ArrayBufferView, layout: Codec
     return data
 }
 
-/** Decode convenience methods */
-export function decodeU8( buf: ArrayBufferView, layout: CodecLayout = {} ) {
+/** Decodes: bytes -> Uint8Array */
+export function decodeU8( buf: ArrayBufferView, layout?: CodecLayout ) {
     return decode<Uint8Array>( buf, layout )
 }
 
-export function decodeU16( buf: ArrayBufferView, layout: CodecLayout = {} ) {
+/** Decodes: bytes -> Uint16Array */
+export function decodeU16( buf: ArrayBufferView, layout?: CodecLayout ) {
     return decode<Uint16Array>( buf, layout )
 }
 
-export function decodeF32( buf: ArrayBufferView, layout: CodecLayout = {} ) {
+/** Decodes: bytes -> Float32Array */
+export function decodeF32( buf: ArrayBufferView, layout?: CodecLayout ) {
     return decode<Float32Array>( buf, layout )
 }
 
-
-interface DecodeStrategy {
-    map: ( v: number ) => number;
-    pack: ( format: Format, data: CodecData ) => Uint8Array
+/** Maps: number -> [0, 255] */
+export function u8map( v: number, limit: number ): number {
+    return Math.floor( (v / limit) * 255 ) // 256 - 1
 }
 
-export function createDecoder( format: Format ) {
-    return {
-        map: ( v: number ) => v,
-        decode,
-        unpack,
-    }
+/** Maps: number -> [0, 65535] */
+export function u16map( v: number, limit: number ): number {
+    return Math.floor( (v / limit) * 65535 ) // 256 * 256 - 1
+}
+
+/** Maps: float -> [0.0, 1.0] */
+export function f32map( v: number, limit: number ): number {
+    return v / limit // normalize
+}
+
+/** Maps: u8 -> [0.0, 1.0] */
+export function u8norm( v: number ): number {
+    return v / 255
+}
+
+/** Maps: u16 -> [0.0, 1.0] */
+export function u16norm( v: number ): number {
+    return v / 65535
 }
