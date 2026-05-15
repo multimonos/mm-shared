@@ -1,8 +1,8 @@
 const HEADER_SIZE = 4 // 1 word
 const VERSION: Version = 1
 
+/** Header **/
 export type Version = 1
-
 
 export enum Format {
     // raw int
@@ -23,126 +23,149 @@ export enum Format {
     vec3_u16 = 0x33,
 }
 
-const CONFIG: Record<Format, {
-    stride: number;
-    size: number;
-    ctor:
+const CodecConfig: Record<Format, {
+    format: Format; // Format: <shape>_<scalar-type>
+    stride: number; // Stride: distance to the next vector in bytes
+    size: number; // Size: width of each vector component in bytes
+    step: number; // Step: distance to next vector in indices ... how many indices to next vector
+    ctor: // Constructor : constructor used to store Format
         | typeof Uint8Array
         | typeof Uint16Array
         | typeof Float32Array
 }> = {
-    // Format : <shape>_<scalar-type>
-    // Stride : logical width of vector in bytes
-    // Size   : width of vector scalar / component in bytes
-    // Ctor   : constructor used to create the data
-    [Format.raw_u8]: { stride: 1, size: 1, ctor: Uint8Array },
-    [Format.raw_u16]: { stride: 2, size: 2, ctor: Uint16Array },
-    [Format.audio_freq_u8]: { stride: 1, size: 1, ctor: Uint8Array },
-    [Format.audio_freq_u16]: { stride: 2, size: 2, ctor: Uint16Array },
-    [Format.audio_freq_f32]: { stride: 4, size: 4, ctor: Float32Array },
-    [Format.audio_time_u8]: { stride: 1, size: 1, ctor: Uint8Array },
-    [Format.audio_time_u16]: { stride: 2, size: 2, ctor: Uint16Array },
-    [Format.audio_time_f32]: { stride: 4, size: 4, ctor: Float32Array },
-    [Format.vec2_u8]: { stride: 2, size: 1, ctor: Uint8Array },
-    [Format.vec2_u16]: { stride: 4, size: 2, ctor: Uint16Array },
-    [Format.vec3_u8]: { stride: 3, size: 1, ctor: Uint8Array },
-    [Format.vec3_u16]: { stride: 6, size: 2, ctor: Uint16Array },
+
+    [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
+    [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
+    [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
+    [Format.audio_freq_u16]: { format: Format.audio_freq_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
+    [Format.audio_freq_f32]: { format: Format.audio_freq_f32, stride: 4, size: 4, step: 1, ctor: Float32Array },
+    [Format.audio_time_u8]: { format: Format.audio_time_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
+    [Format.audio_time_u16]: { format: Format.audio_time_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
+    [Format.audio_time_f32]: { format: Format.audio_time_f32, stride: 4, size: 4, step: 1, ctor: Float32Array },
+    [Format.vec2_u8]: { format: Format.vec2_u8, stride: 2, size: 1, step: 2, ctor: Uint8Array },
+    [Format.vec2_u16]: { format: Format.vec2_u16, stride: 4, size: 2, step: 2, ctor: Uint16Array },
+    [Format.vec3_u8]: { format: Format.vec3_u8, stride: 3, size: 1, step: 3, ctor: Uint8Array },
+    [Format.vec3_u16]: { format: Format.vec3_u16, stride: 6, size: 2, step: 3, ctor: Uint16Array },
 }
 
-export type CodecData = Uint8Array | Uint16Array | Float32Array
 
+/** Helper */
 export function strideFor( format: Format ): number {
-    return CONFIG[format].stride || 1
+    return CodecConfig[format].stride || 1
 }
 
 
 /**
  * Packs an ArrayBufferView with 1-word header.
+ *
+ * CodecData -> Bytes
  */
+export type CodecData =
+    | Uint8Array
+    | Uint16Array
+    | Float32Array
+
 export function pack( format: Format, data: CodecData ): Uint8Array {
     // allocate new memory to add header
-    const pkg = new Uint8Array( HEADER_SIZE + data.byteLength )
+    const bytes = new Uint8Array( HEADER_SIZE + data.byteLength )
 
     // define header
-    pkg[0] = VERSION;
-    pkg[1] = format
-    pkg[2] = strideFor( format )
-    pkg[3] = 0 // filler
+    bytes[0] = VERSION;
+    bytes[1] = format
+    bytes[2] = strideFor( format )
+    bytes[3] = 0 // filler
 
     // copy the data into the packet
-    pkg.set( new Uint8Array( data.buffer, data.byteOffset, data.byteLength ), HEADER_SIZE )
+    bytes.set( new Uint8Array( data.buffer, data.byteOffset, data.byteLength ), HEADER_SIZE )
 
-    return pkg
+    return bytes
 }
 
 /**
  * Unpacks the header and provides a zero-copy subarray of the data
+ *
+ * Bytes -> UnpackedData
  */
-export interface UnpackedData {
-    format: Format
-    stride: number
-    bytes: Uint8Array
+export type CodecLayout = {
+    format?: Format;
+    stride?: number;
+    step?: number;
 }
 
-export function unpack( data: ArrayBufferView ): UnpackedData | null {
-    if ( data.byteLength < HEADER_SIZE ) return null;
+export function unpack( bytes: ArrayBufferView, layout: CodecLayout = {} ): Uint8Array | null {
+    if ( bytes.byteLength < HEADER_SIZE ) return null;
 
     // zero-copy
-    const view = data instanceof Uint8Array
-        ? data
-        : new Uint8Array( data.buffer, data.byteOffset, data.byteLength )
+    const view = bytes instanceof Uint8Array
+        ? bytes
+        : new Uint8Array( bytes.buffer, bytes.byteOffset, bytes.byteLength )
 
-    return {
-        format: view[1] as Format,
-        stride: view[2],
-        bytes: view.subarray( HEADER_SIZE )
-    }
+    const conf = CodecConfig[view[1] as Format]
+    if ( ! conf ) return null;
+
+
+    layout.format = view[1] as Format
+    layout.stride = conf.stride
+    layout.step = conf.step
+
+    return view.subarray( HEADER_SIZE )
 }
 
 
 /**
- * decodes and unpacks the buffer and returns values for easy iteration
+ * Decodes and unpacks the buffer and returns values for easy iteration
+ * buf -> CodecData
  */
-export interface DecodedData<T extends CodecData = CodecData> {
-    format: Format
-    stride: number
-    step: number
-    data: T
-}
+export function decode<T extends CodecData>( buf: ArrayBufferView, layout: CodecLayout = {} ): T | null {
 
-export function decode<T extends CodecData>( buf: ArrayBufferView ): DecodedData<T> | null {
+    // unpack
+    const ulayout: CodecLayout = {}
+    const bytes = unpack( buf, ulayout )
+    if ( ! bytes ) return null;
 
-    const unpacked = unpack( buf )
-    if ( ! unpacked ) return null;
-
-    const { format, bytes } = unpacked
-    const conf = CONFIG[format]
-    console.log( { conf } )
-
+    // get the spec
+    // const { format, bytes } = unpacked
+    const conf = CodecConfig[ulayout.format]
     if ( ! conf ) return null;
 
+    // meta
+    layout.format = conf.format
+    layout.stride = conf.stride
+    layout.step = conf.step
+
+    // create memory view
     const data = new conf.ctor(
         bytes.buffer as ArrayBuffer,
         bytes.byteOffset,
         bytes.byteLength / conf.size
     ) as unknown as T
 
+    return data
+}
+
+/** Decode convenience methods */
+export function decodeU8( buf: ArrayBufferView, layout: CodecLayout = {} ) {
+    return decode<Uint8Array>( buf, layout )
+}
+
+export function decodeU16( buf: ArrayBufferView, layout: CodecLayout = {} ) {
+    return decode<Uint16Array>( buf, layout )
+}
+
+export function decodeF32( buf: ArrayBufferView, layout: CodecLayout = {} ) {
+    return decode<Float32Array>( buf, layout )
+}
+
+
+interface DecodeStrategy {
+    map: ( v: number ) => number;
+    pack: ( format: Format, data: CodecData ) => Uint8Array
+}
+
+export function createDecoder( format: Format ) {
     return {
-        format,
-        stride: conf.stride,
-        step: conf.stride / conf.size,
-        data
+        map: ( v: number ) => v,
+        decode,
+        unpack,
     }
-}
-
-export function decodeU8( buf: ArrayBufferView ): DecodedData<Uint8Array> | null {
-    return decode<Uint8Array>( buf )
-}
-
-export function decodeU16( buf: ArrayBufferView ): DecodedData<Uint16Array> | null {
-    return decode<Uint16Array>( buf )
-}
-
-export function decodeF32( buf: ArrayBufferView ): DecodedData<Float32Array> | null {
-    return decode<Float32Array>( buf )
 }

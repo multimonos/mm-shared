@@ -1,5 +1,5 @@
 import { assert, describe, it } from 'vitest'
-import { decode, Format, pack, decodeU16, unpack } from '../src/streams/codec'
+import { CodecLayout, decode, decodeU16, Format, pack, unpack } from '../src/streams/codec'
 
 describe( 'Codec', () => {
 
@@ -17,18 +17,19 @@ describe( 'Codec', () => {
         assert.equal( packed.byteLength, 16, 'Total length should be 4 (header) + 12 (data)' )
 
         // Unpack and Verify
-        const result = unpack( packed )
+        const um: CodecLayout = {}
+        const bytes = unpack( packed, um )
 
-        assert.isNotNull( result, 'Unpack should return a result object' )
-        if ( result ) {
-            assert.strictEqual( result.format, format )
-            assert.strictEqual( result.stride, 6 )
+        assert.isNotNull( bytes, 'Unpack should return a result object' )
+        if ( bytes ) {
+            assert.strictEqual( um.format, format )
+            assert.strictEqual( um.stride, 6 )
 
             // Validate data integrity without a full copy
             const output = new Uint16Array(
-                result.bytes.buffer,
-                result.bytes.byteOffset,
-                result.bytes.byteLength / 2
+                bytes.buffer,
+                bytes.byteOffset,
+                bytes.byteLength / 2
             )
 
             assert.deepEqual( Array.from( output ), [ 1000, 2000, 3000, 4000, 5000, 6000 ] )
@@ -38,23 +39,26 @@ describe( 'Codec', () => {
     it( 'should handle small Raw_U8 data', () => {
         const input = new Uint8Array( [ 255, 128, 0 ] )
         const packed = pack( Format.raw_u8, input )
-        const result = unpack( packed )
+        const um: CodecLayout = {}
+        const bytes = unpack( packed, um )
 
-        assert.isNotNull( result )
-        assert.strictEqual( result?.stride, 1 )
-        assert.deepEqual( Array.from( result!.bytes ), [ 255, 128, 0 ] )
+        assert.isNotNull( bytes )
+        assert.strictEqual( um.stride, 1 )
+        assert.deepEqual( Array.from( bytes ), [ 255, 128, 0 ] )
     } )
 
     it( 'should handle Float32 alignment', () => {
         const input = new Float32Array( [ 1.5, -2.5, 3.14 ] )
         const packed = pack( Format.audio_time_f32, input )
-        const result = unpack( packed )
 
-        assert.isNotNull( result )
+        const um: CodecLayout = {}
+        const bytes = unpack( packed, um )
+
+        assert.isNotNull( bytes )
         const output = new Float32Array(
-            result!.bytes.buffer,
-            result!.bytes.byteOffset,
-            result!.bytes.byteLength / 4
+            bytes.buffer,
+            bytes.byteOffset,
+            bytes.byteLength / 4
         )
 
         // Use closeTo for floats to avoid precision flakes
@@ -85,12 +89,13 @@ describe( 'Codec', () => {
 
         it( 'vec2_u8', () => {
             const packed = pack( Format.vec2_u8, new Uint8Array( vals ) )
-            const { bytes, stride } = unpack( packed )
-            assert.strictEqual( stride, 2 )
+            const um: CodecLayout = {}
+            const bytes = unpack( packed, um )
+            assert.strictEqual( um.stride, 2 )
 
             let n = 0;
-            for ( let i = 0; i < bytes.length; i += stride ) {
-                const vec2 = bytes.subarray( i, i + stride )
+            for ( let i = 0; i < bytes.length; i += um.stride ) {
+                const vec2 = bytes.subarray( i, i + um.stride )
                 const [ x, y ] = vec2
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
@@ -99,12 +104,13 @@ describe( 'Codec', () => {
 
         it( 'vec2_u8 ( with decode )', () => {
             const packed = pack( Format.vec2_u8, new Uint8Array( vals ) )
-            const { data, stride, step } = decode<Uint8Array>( packed )
-            assert.strictEqual( stride, 2 )
+            const dm: CodecLayout = {}
+            const data = decode<Uint8Array>( packed, dm )
+            assert.strictEqual( dm.stride, 2 )
 
             let n = 0;
-            for ( let i = 0; i < data.length; i += step ) {
-                const vec2 = data.subarray( i, i + step )
+            for ( let i = 0; i < data.length; i += dm.step ) {
+                const vec2 = data.subarray( i, i + dm.step )
                 const [ x, y ] = vec2
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
@@ -115,12 +121,13 @@ describe( 'Codec', () => {
             const packed = pack( Format.vec2_u16, new Uint16Array( vals ) )
 
             // convenience fn
-            const { data, stride, step } = decodeU16( packed )
+            const dm: CodecLayout = {}
+            const data = decodeU16( packed, dm )
 
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < data.length; i += step ) {
+            for ( let i = 0; i < data.length; i += dm.step ) {
                 const x = data[i]
                 const y = data[i + 1]
                 assert.deepEqual( v2[n], [ x, y ] )
@@ -132,12 +139,13 @@ describe( 'Codec', () => {
             const packed = pack( Format.vec2_u16, new Uint16Array( vals ) )
 
             // manual
-            const { data, stride, step } = decode<Uint16Array>( packed )
+            const dm: CodecLayout = {}
+            const data = decode<Uint16Array>( packed, dm )
 
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < data.length; i += step ) {
+            for ( let i = 0; i < data.length; i += dm.step ) {
                 const x = data[i]
                 const y = data[i + 1]
                 assert.deepEqual( v2[n], [ x, y ] )
@@ -148,12 +156,13 @@ describe( 'Codec', () => {
         it( 'vec3_u16 ( generic )', () => {
             const packed = pack( Format.vec3_u16, new Uint16Array( vals ) )
 
-            const { data, stride, step } = decode<Uint16Array>( packed )
+            const dm: CodecLayout = {}
+            const data = decode<Uint16Array>( packed, dm )
 
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < data.length; i += step ) {
+            for ( let i = 0; i < data.length; i += dm.step ) {
                 const x = data[i]
                 const y = data[i + 1]
                 const z = data[i + 2]
