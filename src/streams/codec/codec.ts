@@ -1,8 +1,27 @@
 const HEADER_SIZE = 4 // 1 word
 const VERSION: Version = 1
 
-/** Header **/
+export function strideFor( format: Format ): number {
+    return Config[format].stride || 1
+}
+
+
+/** Types */
 export type Version = 1
+
+// export type CodecData =
+//     | Uint8Array
+//     | Uint16Array
+//     | Float32Array
+
+export type CodecData<T extends Uint8Array | Uint16Array | Float32Array
+    = Uint8Array | Uint16Array | Float32Array> = T
+
+export type CodecLayout = {
+    format?: Format;
+    stride?: number; // Useful for iter a Uint8Array only
+    size?: number; // Useful for iter Uint8Array only
+}
 
 export enum Format {
     // raw int
@@ -23,7 +42,9 @@ export enum Format {
     vec3_u16 = 0x33,
 }
 
-const CodecConfig: Record<Format, {
+
+/** Config / Code Definition */
+export const Config: Record<Format, {
     format: Format; // Format: <shape>_<scalar-type>
     stride: number; // Stride: distance to the next vector in bytes
     size: number; // Size: width of each vector component in bytes
@@ -33,7 +54,6 @@ const CodecConfig: Record<Format, {
         | typeof Uint16Array
         | typeof Float32Array
 }> = {
-
     [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
     [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
     [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
@@ -49,22 +69,11 @@ const CodecConfig: Record<Format, {
 }
 
 
-/** Helper */
-export function strideFor( format: Format ): number {
-    return CodecConfig[format].stride || 1
-}
-
-
 /**
  * Packs an ArrayBufferView with 1-word header.
  *
  * CodecData -> Bytes
  */
-export type CodecData =
-    | Uint8Array
-    | Uint16Array
-    | Float32Array
-
 export function pack( format: Format, data: CodecData ): Uint8Array {
     // allocate new memory to add header
     const bytes = new Uint8Array( HEADER_SIZE + data.byteLength )
@@ -81,17 +90,14 @@ export function pack( format: Format, data: CodecData ): Uint8Array {
     return bytes
 }
 
+
 /**
  * Discards the header and returns a zero-copy subarray of the data
  *
  * Bytes -> Uint8Array
+ *
+ * NOTE always return uint8array
  */
-export type CodecLayout = {
-    format?: Format;
-    stride?: number;
-    step?: number;
-}
-
 export function unpack( bytes: ArrayBufferView, layout?: CodecLayout ): Uint8Array | null {
     if ( bytes.byteLength < HEADER_SIZE ) return null;
 
@@ -100,93 +106,15 @@ export function unpack( bytes: ArrayBufferView, layout?: CodecLayout ): Uint8Arr
         ? bytes
         : new Uint8Array( bytes.buffer, bytes.byteOffset, bytes.byteLength )
 
-    const conf = CodecConfig[view[1] as Format]
+    const conf = Config[view[1] as Format]
     if ( ! conf ) return null;
 
     if ( layout ) {  // cut this out with a SCAVENGER default for layout
         layout.format = view[1] as Format
         layout.stride = conf.stride
-        layout.step = conf.step
+        layout.size = conf.size
     }
 
     return view.subarray( HEADER_SIZE )
 }
 
-
-/**
- * Decodes and unpacks the buffer and returns values for easy iteration
- * buf -> CodecData
- */
-export function decode<T extends CodecData>( buf: ArrayBufferView, layout?: CodecLayout ): T | null {
-
-    // unpack
-    const bytes = unpack( buf )
-    if ( ! bytes ) return null;
-
-    // We know buf[1] is safe because unpack succeeded.
-    // We cast to Uint8Array once to get fast index access.
-    const view = buf instanceof Uint8Array
-        ? buf
-        : new Uint8Array( buf.buffer, buf.byteOffset ); // Skipe length bounds check here ( no bytes.byteLength ).
-    const format = view[1] as Format;
-
-    // get the spec
-    const conf = CodecConfig[format]
-    if ( ! conf ) return null;
-
-    // meta
-    if ( layout ) {  // cut this out with a SCAVENGER default for layout
-        layout.format = conf.format
-        layout.stride = conf.stride
-        layout.step = conf.step
-    }
-
-    // create memory view
-    const data = new conf.ctor(
-        bytes.buffer as ArrayBuffer,
-        bytes.byteOffset,
-        bytes.byteLength / conf.size
-    ) as unknown as T
-
-    return data
-}
-
-/** Decodes: bytes -> Uint8Array */
-export function decodeU8( buf: ArrayBufferView, layout?: CodecLayout ) {
-    return decode<Uint8Array>( buf, layout )
-}
-
-/** Decodes: bytes -> Uint16Array */
-export function decodeU16( buf: ArrayBufferView, layout?: CodecLayout ) {
-    return decode<Uint16Array>( buf, layout )
-}
-
-/** Decodes: bytes -> Float32Array */
-export function decodeF32( buf: ArrayBufferView, layout?: CodecLayout ) {
-    return decode<Float32Array>( buf, layout )
-}
-
-/** Maps: number -> [0, 255] */
-export function u8map( v: number, limit: number ): number {
-    return Math.floor( (v / limit) * 255 ) // 256 - 1
-}
-
-/** Maps: number -> [0, 65535] */
-export function u16map( v: number, limit: number ): number {
-    return Math.floor( (v / limit) * 65535 ) // 256 * 256 - 1
-}
-
-/** Maps: float -> [0.0, 1.0] */
-export function f32map( v: number, limit: number ): number {
-    return v / limit // normalize
-}
-
-/** Maps: u8 -> [0.0, 1.0] */
-export function u8norm( v: number ): number {
-    return v / 255
-}
-
-/** Maps: u16 -> [0.0, 1.0] */
-export function u16norm( v: number ): number {
-    return v / 65535
-}

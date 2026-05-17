@@ -1,4 +1,4 @@
-import { CodecData } from "./codec";
+import { CodecData } from "./codec/codec";
 
 export interface DataProducer {
     /* sends data ... egress */
