@@ -1,5 +1,6 @@
 import { assert, describe, it } from 'vitest'
-import { CodecLayout, decode, decodeU16, Format, pack, unpack } from '../src/streams/codec'
+import { CodecLayout, Format, pack, unpack } from '../src/streams/codec/codec'
+import {decode,decodeU16} from "../src/streams/codec/decode";
 
 describe( 'Codec', () => {
 
@@ -21,6 +22,7 @@ describe( 'Codec', () => {
         const bytes = unpack( packed, um )
 
         assert.isNotNull( bytes, 'Unpack should return a result object' )
+
         if ( bytes ) {
             assert.strictEqual( um.format, format )
             assert.strictEqual( um.stride, 6 )
@@ -109,8 +111,8 @@ describe( 'Codec', () => {
             assert.strictEqual( dm.stride, 2 )
 
             let n = 0;
-            for ( let i = 0; i < data.length; i += dm.step ) {
-                const vec2 = data.subarray( i, i + dm.step )
+            for ( let i = 0; i < data.length; i += 2 ) {
+                const vec2 = data.subarray( i, i + 2 )
                 const [ x, y ] = vec2
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
@@ -127,7 +129,7 @@ describe( 'Codec', () => {
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < data.length; i += dm.step ) {
+            for ( let i = 0; i < data.length; i += 2 ) {
                 const x = data[i]
                 const y = data[i + 1]
                 assert.deepEqual( v2[n], [ x, y ] )
@@ -145,7 +147,7 @@ describe( 'Codec', () => {
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < data.length; i += dm.step ) {
+            for ( let i = 0; i < data.length; i += 2 ) {
                 const x = data[i]
                 const y = data[i + 1]
                 assert.deepEqual( v2[n], [ x, y ] )
@@ -162,7 +164,7 @@ describe( 'Codec', () => {
             let n = 0;
 
             // example loop
-            for ( let i = 0; i < data.length; i += dm.step ) {
+            for ( let i = 0; i < data.length; i += 3 ) {
                 const x = data[i]
                 const y = data[i + 1]
                 const z = data[i + 2]
