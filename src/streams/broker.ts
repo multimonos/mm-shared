@@ -1,10 +1,20 @@
 export interface DataBroker {
-    /* receives data ... ingress */
-    push( msg: Uint8Array | Record<string, unknown> | string, senderId?: number ): void;
+    /** Receives data ... ingress */
+    push( data: Uint8Array | Record<string, unknown> | string, senderId?: number ): void;
+
+    /** Is data in correct wire format */
     canPush( data: unknown ): data is Uint8Array | string | Record<string, unknown>;
+
+    /** Callback when broker receives Uint8Array data */
     onData( fn: ( bytes: Uint8Array, senderId: number ) => void ): () => void;
-    sendData( bytes: Uint8Array, senderId?: number ): void;
+
+    /** Callback when broker receives json data */
     onMeta( fn: ( data: Record<string, unknown>, senderId: number ) => void ): () => void;
+
+    /** Send data to the broker directly via broker instance */
+    sendData( bytes: Uint8Array, senderId?: number ): void;
+
+    /** Send metadata to the broker directly via broker instance */
     sendMeta( data: Record<string, unknown>, senderId?: number ): void;
 }
 
