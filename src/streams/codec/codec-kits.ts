@@ -13,14 +13,15 @@ export interface CodecKit<T extends CodecData> {
     initBuffer( len: number ): void;
     decode: Decoder<T>
     map( v: number, max: number ): number;
-    unmap( v: number,max:number ): number;
+    unmap( v: number, max: number ): number;
     norm( v: number ): number;
     pack( data: CodecData<T> ): Uint8Array;
     unpack( bytes: Uint8Array, layout?: CodecLayout ): Uint8Array | null;
+    max: 255 | 65535
 }
 
 
-export function u8kit( format: Format ): CodecKit<Uint8Array> {
+export function u8CodecKit( format: Format ): CodecKit<Uint8Array> {
 
     // config
     let conf = Config[format]
@@ -43,10 +44,11 @@ export function u8kit( format: Format ): CodecKit<Uint8Array> {
         norm: u8norm,
         pack: ( data: CodecData<Uint8Array> ) => pack( format, data ),
         unpack,
+        max: 255,
     }
 }
 
-export function u16kit( format: Format ): CodecKit<Uint16Array> {
+export function u16CodecKit( format: Format ): CodecKit<Uint16Array> {
 
     // config
     let conf = Config[format]
@@ -69,5 +71,6 @@ export function u16kit( format: Format ): CodecKit<Uint16Array> {
         unmap: ( v: number, max: number ) => u16norm( v ) * max,
         pack: ( data: CodecData<Uint16Array> ) => pack( format, data ),
         unpack,
+        max: 65535
     }
 }

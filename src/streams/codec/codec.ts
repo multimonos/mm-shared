@@ -1,5 +1,7 @@
 const HEADER_SIZE = 4 // 1 word
 const VERSION: Version = 1
+export const U8_MAX = 255
+export const U16_MAX = 65535
 
 export function strideFor( format: Format ): number {
     return Config[format].stride || 1
@@ -35,7 +37,7 @@ export enum Format {
 }
 
 
-/** Config / Code Definition */
+/** Config / Registry */
 export const Config: Record<Format, {
     format: Format; // Format: <shape>_<scalar-type>
     stride: number; // Stride: distance to the next vector in bytes

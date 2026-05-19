@@ -11,11 +11,6 @@ type BaseSketchContext = {
     audio?: AudioInputApi;
 }
 
-export type SketchNotifier = {
-    loaded: ( p: P5 ) => void;
-    ended: ( p: P5 ) => void;
-}
-
 export type ConsumerContext = BaseSketchContext & {
     broker?: DataBroker | undefined;
     producer?: never;
@@ -26,5 +21,15 @@ export type GeneratorContext = BaseSketchContext & {
     producer?: DataProducer | undefined;
 }
 
+export type TransceiverContext = BaseSketchContext & {
+    broker?: never;
+    producer?: DataProducer | undefined;
+}
+
 export type SketchContext = ConsumerContext | GeneratorContext
+
+export type SketchNotifier = {
+    loaded: ( p: P5 ) => void;
+    ended: ( p: P5 ) => void;
+}
 
