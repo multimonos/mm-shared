@@ -49,24 +49,24 @@ describe( 'Codec', () => {
         assert.deepEqual( Array.from( bytes ), [ 255, 128, 0 ] )
     } )
 
-    it( 'should handle Float32 alignment', () => {
-        const input = new Float32Array( [ 1.5, -2.5, 3.14 ] )
-        const packed = pack( Format.audio_time_f32, input )
-
-        const um: CodecLayout = {}
-        const bytes = unpack( packed, um )
-
-        assert.isNotNull( bytes )
-        const output = new Float32Array(
-            bytes.buffer,
-            bytes.byteOffset,
-            bytes.byteLength / 4
-        )
-
-        // Use closeTo for floats to avoid precision flakes
-        assert.closeTo( output[0], 1.5, 0.0001 )
-        assert.closeTo( output[2], 3.14, 0.0001 )
-    } )
+    // it( 'should handle Float32 alignment', () => {
+    //     const input = new Float32Array( [ 1.5, -2.5, 3.14 ] )
+    //     const packed = pack( Format.audio_time_f32, input )
+    //
+    //     const um: CodecLayout = {}
+    //     const bytes = unpack( packed, um )
+    //
+    //     assert.isNotNull( bytes )
+    //     const output = new Float32Array(
+    //         bytes.buffer,
+    //         bytes.byteOffset,
+    //         bytes.byteLength / 4
+    //     )
+    //
+    //     // Use closeTo for floats to avoid precision flakes
+    //     assert.closeTo( output[0], 1.5, 0.0001 )
+    //     assert.closeTo( output[2], 3.14, 0.0001 )
+    // } )
 
     it( 'should return null for buffers smaller than header size', () => {
         const tiny = new Uint8Array( [ 0, 1, 2 ] )

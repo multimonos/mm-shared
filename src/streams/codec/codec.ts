@@ -9,13 +9,7 @@ export function strideFor( format: Format ): number {
 /** Types */
 export type Version = 1
 
-// export type CodecData =
-//     | Uint8Array
-//     | Uint16Array
-//     | Float32Array
-
-export type CodecData<T extends Uint8Array | Uint16Array | Float32Array
-    = Uint8Array | Uint16Array | Float32Array> = T
+export type CodecData<T extends Uint8Array | Uint16Array = Uint8Array | Uint16Array> = T
 
 export type CodecLayout = {
     format?: Format;
@@ -30,11 +24,9 @@ export enum Format {
     // audio frequency domain
     audio_freq_u8 = 0x10,
     audio_freq_u16 = 0x11,
-    audio_freq_f32 = 0x12,
     // audio time domain
     audio_time_u8 = 0x20,
     audio_time_u16 = 0x21,
-    audio_time_f32 = 0x22,
     // vectors
     vec2_u8 = 0x30,
     vec2_u16 = 0x31,
@@ -48,24 +40,20 @@ export const Config: Record<Format, {
     format: Format; // Format: <shape>_<scalar-type>
     stride: number; // Stride: distance to the next vector in bytes
     size: number; // Size: width of each vector component in bytes
-    step: number; // Step: distance to next vector in indices ... how many indices to next vector
     ctor: // Constructor : constructor used to store Format
         | typeof Uint8Array
         | typeof Uint16Array
-        | typeof Float32Array
 }> = {
-    [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
-    [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
-    [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
-    [Format.audio_freq_u16]: { format: Format.audio_freq_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
-    [Format.audio_freq_f32]: { format: Format.audio_freq_f32, stride: 4, size: 4, step: 1, ctor: Float32Array },
-    [Format.audio_time_u8]: { format: Format.audio_time_u8, stride: 1, size: 1, step: 1, ctor: Uint8Array },
-    [Format.audio_time_u16]: { format: Format.audio_time_u16, stride: 2, size: 2, step: 1, ctor: Uint16Array },
-    [Format.audio_time_f32]: { format: Format.audio_time_f32, stride: 4, size: 4, step: 1, ctor: Float32Array },
-    [Format.vec2_u8]: { format: Format.vec2_u8, stride: 2, size: 1, step: 2, ctor: Uint8Array },
-    [Format.vec2_u16]: { format: Format.vec2_u16, stride: 4, size: 2, step: 2, ctor: Uint16Array },
-    [Format.vec3_u8]: { format: Format.vec3_u8, stride: 3, size: 1, step: 3, ctor: Uint8Array },
-    [Format.vec3_u16]: { format: Format.vec3_u16, stride: 6, size: 2, step: 3, ctor: Uint16Array },
+    [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, ctor: Uint8Array },
+    [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, ctor: Uint16Array },
+    [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, ctor: Uint8Array },
+    [Format.audio_freq_u16]: { format: Format.audio_freq_u16, stride: 2, size: 2, ctor: Uint16Array },
+    [Format.audio_time_u8]: { format: Format.audio_time_u8, stride: 1, size: 1, ctor: Uint8Array },
+    [Format.audio_time_u16]: { format: Format.audio_time_u16, stride: 2, size: 2, ctor: Uint16Array },
+    [Format.vec2_u8]: { format: Format.vec2_u8, stride: 2, size: 1, ctor: Uint8Array },
+    [Format.vec2_u16]: { format: Format.vec2_u16, stride: 4, size: 2, ctor: Uint16Array },
+    [Format.vec3_u8]: { format: Format.vec3_u8, stride: 3, size: 1, ctor: Uint8Array },
+    [Format.vec3_u16]: { format: Format.vec3_u16, stride: 6, size: 2, ctor: Uint16Array },
 }
 
 

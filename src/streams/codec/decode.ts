@@ -19,11 +19,6 @@ export const decodeU16: Decoder<Uint16Array> = ( buf, layout ) => {
     return decode<Uint16Array>( buf, layout )
 }
 
-/** Decodes: bytes -> Float32Array */
-export const decodeF32: Decoder<Float32Array> = ( buf, layout ) => {
-    return decode<Float32Array>( buf, layout )
-}
-
 
 /**
  * Decodes and unpacks a u8 buffer into it's own type ... returns values for easier iteration
