@@ -2,17 +2,17 @@ import { DataBroker } from "../broker";
 
 
 /**
- * Stores "windowSize" vectors for each sender.
+ * Stores "size" frames of vectors for each sender.
  *
  * @param broker
- * @param windowSize
+ * @param size
  * @param debug
  */
-export function createDataWindow( broker: DataBroker, {
-    windowSize = 2,
+export function createWindowSink( broker: DataBroker, {
+    size = 2,
     debug = false
 }: {
-    windowSize?: number;
+    size?: number; // width of the window in indices
     debug?: boolean;
 } = {} ) {
 
@@ -24,7 +24,7 @@ export function createDataWindow( broker: DataBroker, {
 
         window.push( packet )
 
-        if ( window.length > windowSize ) {
+        if ( window.length > size ) {
             window.shift()
         }
 
