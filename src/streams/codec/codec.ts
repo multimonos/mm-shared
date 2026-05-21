@@ -1,7 +1,7 @@
-const HEADER_SIZE = 4 // 1 word
-const VERSION: Version = 1
-export const U8_MAX = 255
-export const U16_MAX = 65535
+export const HEADER_SIZE = 4 // 1 word
+export const VERSION: Version = 1
+export const U8_MAX = 255 as const
+export const U16_MAX = 65535 as const
 
 export function strideFor( format: Format ): number {
     return Config[format].stride || 1
@@ -17,19 +17,21 @@ export type CodecLayout = {
     format?: Format;
     stride?: number; // Useful for iter a Uint8Array only
     size?: number; // Useful for iter Uint8Array only
+    max?: number;
 }
 
 export enum Format {
-    // raw int
+    unknown = 0xff,
+
     raw_u8 = 0x1,
     raw_u16 = 0x2,
-    // audio frequency domain
+
     audio_freq_u8 = 0x10,
     audio_freq_u16 = 0x11,
-    // audio time domain
+
     audio_time_u8 = 0x20,
     audio_time_u16 = 0x21,
-    // vectors
+
     vec2_u8 = 0x30,
     vec2_u16 = 0x31,
     vec3_u8 = 0x32,
@@ -42,20 +44,22 @@ export const Config: Record<Format, {
     format: Format; // Format: <shape>_<scalar-type>
     stride: number; // Stride: distance to the next vector in bytes
     size: number; // Size: width of each vector component in bytes
+    max: typeof U8_MAX | typeof U16_MAX;
     ctor: // Constructor : constructor used to store Format
         | typeof Uint8Array
         | typeof Uint16Array
 }> = {
-    [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, ctor: Uint8Array },
-    [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, ctor: Uint16Array },
-    [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, ctor: Uint8Array },
-    [Format.audio_freq_u16]: { format: Format.audio_freq_u16, stride: 2, size: 2, ctor: Uint16Array },
-    [Format.audio_time_u8]: { format: Format.audio_time_u8, stride: 1, size: 1, ctor: Uint8Array },
-    [Format.audio_time_u16]: { format: Format.audio_time_u16, stride: 2, size: 2, ctor: Uint16Array },
-    [Format.vec2_u8]: { format: Format.vec2_u8, stride: 2, size: 1, ctor: Uint8Array },
-    [Format.vec2_u16]: { format: Format.vec2_u16, stride: 4, size: 2, ctor: Uint16Array },
-    [Format.vec3_u8]: { format: Format.vec3_u8, stride: 3, size: 1, ctor: Uint8Array },
-    [Format.vec3_u16]: { format: Format.vec3_u16, stride: 6, size: 2, ctor: Uint16Array },
+    [Format.unknown]: { format: Format.unknown, stride: 0, size: 0, ctor: null, max: null },
+    [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, ctor: Uint8Array, max: U8_MAX },
+    [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, ctor: Uint16Array, max: U16_MAX },
+    [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, ctor: Uint8Array, max: U8_MAX },
+    [Format.audio_freq_u16]: { format: Format.audio_freq_u16, stride: 2, size: 2, ctor: Uint16Array, max: U16_MAX },
+    [Format.audio_time_u8]: { format: Format.audio_time_u8, stride: 1, size: 1, ctor: Uint8Array, max: U8_MAX },
+    [Format.audio_time_u16]: { format: Format.audio_time_u16, stride: 2, size: 2, ctor: Uint16Array, max: U16_MAX },
+    [Format.vec2_u8]: { format: Format.vec2_u8, stride: 2, size: 1, ctor: Uint8Array, max: U8_MAX },
+    [Format.vec2_u16]: { format: Format.vec2_u16, stride: 4, size: 2, ctor: Uint16Array, max: U16_MAX },
+    [Format.vec3_u8]: { format: Format.vec3_u8, stride: 3, size: 1, ctor: Uint8Array, max: U8_MAX },
+    [Format.vec3_u16]: { format: Format.vec3_u16, stride: 6, size: 2, ctor: Uint16Array, max: U16_MAX },
 }
 
 
@@ -74,7 +78,7 @@ export function pack( format: Format, data: CodecData ): Uint8Array {
     bytes[2] = strideFor( format )
     bytes[3] = 0 // filler
 
-    // copy the data into the packet
+    // copy the data into the packet using header size as the offset
     bytes.set( new Uint8Array( data.buffer, data.byteOffset, data.byteLength ), HEADER_SIZE )
 
     return bytes
@@ -88,23 +92,20 @@ export function pack( format: Format, data: CodecData ): Uint8Array {
  *
  * NOTE always return uint8array
  */
-export function unpack( bytes: ArrayBufferView, layout?: CodecLayout ): Uint8Array | null {
+export function unpack( bytes: Uint8Array, layout?: CodecLayout ): Uint8Array | null {
     if ( bytes.byteLength < HEADER_SIZE ) return null;
 
-    // zero-copy
-    const view = bytes instanceof Uint8Array
-        ? bytes
-        : new Uint8Array( bytes.buffer, bytes.byteOffset, bytes.byteLength )
-
-    const conf = Config[view[1] as Format]
+    const conf = Config[bytes[1] as Format]
     if ( ! conf ) return null;
 
-    if ( layout ) {  // cut this out with a SCAVENGER default for layout
-        layout.format = view[1] as Format
+    if ( layout ) {
+        layout.format = bytes[1] as Format
         layout.stride = conf.stride
         layout.size = conf.size
+        layout.max = conf.max
     }
 
-    return view.subarray( HEADER_SIZE )
+    // zero copy not zero alloc
+    return bytes.subarray( HEADER_SIZE )
 }
 

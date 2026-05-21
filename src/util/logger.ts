@@ -3,6 +3,7 @@ const sampleCounts: Record<string, number> = {}
 const groupCounts: Record<string, number> = {}
 const groupDumped: Record<string, boolean> = {}
 const groupValues: Record<string, any> = {}
+const minmaxValues: [ number, number ] = [ 0, 0 ]
 
 type ConsoleLogFunctions = 'log' | 'error' | 'warn' | 'info'
 
@@ -73,9 +74,38 @@ export function collect(
     return api
 }
 
+export function minmax() {
+    let min: number | null = null
+    let max: number | null = Infinity
+
+    return {
+        get min() {
+            return min
+        },
+        get max() {
+            return max
+        },
+        reset() {
+            min = -Infinity
+            max = Infinity
+        },
+        current: () => ({ min, max }),
+        log: ( x: number ) => {
+            if ( min === null || x > min ) {
+                min = x
+                console.log( { min, max } );
+            }
+            if ( max === null || x < max ) {
+                max = x
+                console.log( { min, max } )
+            }
+        }
+    }
+}
 
 export const logger = {
     limit,
     sample,
     collect,
+    minmax,
 }

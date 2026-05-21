@@ -4,8 +4,8 @@ import { CodecData, CodecLayout, Config, Format, unpack } from "./codec";
  * do not type the decode fn as Decoder<T>
  */
 export type Decoder<T extends CodecData> = (
-    buf: ArrayBufferView,
-    laout?: CodecLayout
+    buf: Uint8Array,
+    layout?: CodecLayout
 ) => T | null;
 
 
@@ -24,33 +24,22 @@ export const decodeU16: Decoder<Uint16Array> = ( buf, layout ) => {
  * Decodes and unpacks a u8 buffer into it's own type ... returns values for easier iteration
  * buf -> CodecData
  */
-export function decode<T extends CodecData>( buf: ArrayBufferView, layout?: CodecLayout ): T | null {
+export function decode<T extends CodecData>( buf: Uint8Array, layout?: CodecLayout ): T | null {
+    const dbg = false
 
-    // console.log( 'buf',buf.length )
+    dbg && console.log( 'buf', { buf } )
 
     // unpack
-    const bytes = unpack( buf )
+    const bytes = unpack( buf, layout )
+    dbg && console.log( { bytes } )
     if ( ! bytes ) return null;
 
-    // console.log( 'bytes',bytes.length )
-
-    // We know buf[1] is safe because unpack succeeded.
-    // We cast to Uint8Array once to get fast index access.
-    const view = buf instanceof Uint8Array
-        ? buf
-        : new Uint8Array( buf.buffer, buf.byteOffset ); // Skipe length bounds check here ( no bytes.byteLength ).
-    const format = view[1] as Format;
+    const format = buf[1] as Format;
 
     // get the spec
     const conf = Config[format]
+    dbg && console.log( { conf } )
     if ( ! conf ) return null;
-
-    // meta
-    if ( layout ) {  // cut this out with a SCAVENGER default for layout
-        layout.format = conf.format
-        layout.stride = conf.stride
-        layout.size = conf.size
-    }
 
     // create memory view
     const data = new conf.ctor(
@@ -58,8 +47,7 @@ export function decode<T extends CodecData>( buf: ArrayBufferView, layout?: Code
         bytes.byteOffset,
         bytes.byteLength / conf.size
     ) as unknown as T
-
-    // console.log( 'data',data.length )
+    dbg && console.log( { data } )
 
     return data
 }

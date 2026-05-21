@@ -1,8 +1,8 @@
 import { assert, describe, it } from 'vitest'
 import { CodecLayout, Format, pack, unpack } from '../src/streams/codec/codec'
-import {decode,decodeU16} from "../src/streams/codec/decode";
+import { decode, decodeU16 } from "../src/streams/codec/decode";
 
-describe( 'Codec', () => {
+describe.only( 'Codec', () => {
 
     it( 'should round-trip Vec3_U16 data correctly', () => {
         // 2 vectors of U16 (6 components * 2 bytes = 12 bytes)
@@ -49,25 +49,6 @@ describe( 'Codec', () => {
         assert.deepEqual( Array.from( bytes ), [ 255, 128, 0 ] )
     } )
 
-    // it( 'should handle Float32 alignment', () => {
-    //     const input = new Float32Array( [ 1.5, -2.5, 3.14 ] )
-    //     const packed = pack( Format.audio_time_f32, input )
-    //
-    //     const um: CodecLayout = {}
-    //     const bytes = unpack( packed, um )
-    //
-    //     assert.isNotNull( bytes )
-    //     const output = new Float32Array(
-    //         bytes.buffer,
-    //         bytes.byteOffset,
-    //         bytes.byteLength / 4
-    //     )
-    //
-    //     // Use closeTo for floats to avoid precision flakes
-    //     assert.closeTo( output[0], 1.5, 0.0001 )
-    //     assert.closeTo( output[2], 3.14, 0.0001 )
-    // } )
-
     it( 'should return null for buffers smaller than header size', () => {
         const tiny = new Uint8Array( [ 0, 1, 2 ] )
         assert.isNull( unpack( tiny ) )
@@ -91,13 +72,14 @@ describe( 'Codec', () => {
 
         it( 'vec2_u8', () => {
             const packed = pack( Format.vec2_u8, new Uint8Array( vals ) )
-            const um: CodecLayout = {}
-            const bytes = unpack( packed, um )
-            assert.strictEqual( um.stride, 2 )
+
+            const lay: CodecLayout = {}
+            const bytes = unpack( packed, lay )
+            assert.strictEqual( lay.stride, 2 )
 
             let n = 0;
-            for ( let i = 0; i < bytes.length; i += um.stride ) {
-                const vec2 = bytes.subarray( i, i + um.stride )
+            for ( let i = 0; i < bytes.length; i += lay.stride ) {
+                const vec2 = bytes.subarray( i, i + lay.stride )
                 const [ x, y ] = vec2
                 assert.deepEqual( v2[n], [ x, y ] )
                 n++
@@ -106,9 +88,12 @@ describe( 'Codec', () => {
 
         it( 'vec2_u8 ( with decode )', () => {
             const packed = pack( Format.vec2_u8, new Uint8Array( vals ) )
-            const dm: CodecLayout = {}
-            const data = decode<Uint8Array>( packed, dm )
-            assert.strictEqual( dm.stride, 2 )
+
+            const lay: CodecLayout = {}
+            const data = decode<Uint8Array>( packed, lay )
+
+            assert.strictEqual( lay.stride, 2 )
+            assert.isNotNull( data )
 
             let n = 0;
             for ( let i = 0; i < data.length; i += 2 ) {
@@ -122,13 +107,10 @@ describe( 'Codec', () => {
         it( 'vec2_u16', () => {
             const packed = pack( Format.vec2_u16, new Uint16Array( vals ) )
 
-            // convenience fn
-            const dm: CodecLayout = {}
-            const data = decodeU16( packed, dm )
+            const lay: CodecLayout = {}
+            const data = decodeU16( packed, lay )
 
             let n = 0;
-
-            // example loop
             for ( let i = 0; i < data.length; i += 2 ) {
                 const x = data[i]
                 const y = data[i + 1]
@@ -140,13 +122,10 @@ describe( 'Codec', () => {
         it( 'vec2_u16 ( generic )', () => {
             const packed = pack( Format.vec2_u16, new Uint16Array( vals ) )
 
-            // manual
-            const dm: CodecLayout = {}
-            const data = decode<Uint16Array>( packed, dm )
+            const lay: CodecLayout = {}
+            const data = decode<Uint16Array>( packed, lay )
 
             let n = 0;
-
-            // example loop
             for ( let i = 0; i < data.length; i += 2 ) {
                 const x = data[i]
                 const y = data[i + 1]
@@ -158,12 +137,10 @@ describe( 'Codec', () => {
         it( 'vec3_u16 ( generic )', () => {
             const packed = pack( Format.vec3_u16, new Uint16Array( vals ) )
 
-            const dm: CodecLayout = {}
-            const data = decode<Uint16Array>( packed, dm )
+            const lay: CodecLayout = {}
+            const data = decode<Uint16Array>( packed, lay )
 
             let n = 0;
-
-            // example loop
             for ( let i = 0; i < data.length; i += 3 ) {
                 const x = data[i]
                 const y = data[i + 1]
