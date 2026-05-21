@@ -7,13 +7,17 @@ export interface CodecReader {
     buf: Uint8Array;
     format: string;
     layout: CodecLayout;
-    max: typeof U8_MAX| typeof U16_MAX;
+    max: typeof U8_MAX | typeof U16_MAX;
     stride: number;
 
-    // other
+    // reading
     unpack: ( bytes: Uint8Array ) => Uint8Array | null;
+    count: number;
+    nth: ( index: number ) => number,
     read: ( bytes: Uint8Array, start: number ) => number;
-    nnorm: ( v: number ) => number;
+
+    // un-mapping
+    unorm: ( v: number ) => number;
     snorm: ( v: number ) => number;
 }
 
@@ -56,10 +60,6 @@ export function createCodecReader() {
             return buf
         },
 
-        read: ( bytes: Uint8Array, start: number ) => {
-            return readBytes( bytes, start, layout.size )
-        },
-
         /** unsigned normalization ... x : [0, range] -> [0.0, 1.0] */
         unorm: ( v: number ) => {
             return unorm( v, layout.max )
@@ -92,7 +92,13 @@ export function createCodecReader() {
 
             return 0
         },
-    }
+
+        /** low level reader for unpacked data */
+        read: ( bytes: Uint8Array, start: number ) => {
+            return readBytes( bytes, start, layout.size )
+        },
+
+    } as CodecReader
 }
 
 
