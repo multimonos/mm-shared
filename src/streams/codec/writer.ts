@@ -1,4 +1,4 @@
-import { CodecData, Config, Format, pack } from "./codec";
+import { CodecData, Config, Format, pack, U16_MAX, U8_MAX } from "./codec";
 import { quant16, quant8, squant16, squant8 } from "./mapping";
 
 
@@ -6,8 +6,8 @@ export interface CodecWriter {
     // getters
     buf: CodecData;
     format: string;
-    max: 255 | 65535;
-    type: 'u8' | 'u16';
+    max: typeof U8_MAX | typeof U16_MAX;
+    size: number;
 
     // other
     initBuffer: ( length: number ) => void;
@@ -16,24 +16,35 @@ export interface CodecWriter {
     squant: ( v: number ) => number;
 }
 
-export function createCodecWriter( format: Format ): CodecWriter {
+export type CodecWriterOptions = {
+    size?: number;
+}
+
+export function createCodecWriter(
+    format: Format,
+    options: CodecWriterOptions = {
+        size: 0
+    } ): CodecWriter {
+
     // resolve config
     const conf = Config[format]
     if ( ! conf ) throw new Error( `CodecFormat not found '${ format }'` )
 
-    // scavengers
-    let buf: CodecData = null as any
+    // state
+    let { size } = options
+    let buf: CodecData = new conf.ctor( options.size )
 
     console.log( 'format:', Format[format] )
 
     // U8
     const u8Writer: CodecWriter = {
-        get type() { return 'u8' },
-        get max() { return conf.max},
         get buf() { return buf },
+        get size() { return size },
+        get max() { return conf.max},
         get format() { return Format[format] },
 
         initBuffer( length: number ) {
+            size = length
             buf = new Uint8Array( length )
         },
 
@@ -51,12 +62,13 @@ export function createCodecWriter( format: Format ): CodecWriter {
 
     // U16
     const u16Writer = {
-        get type() { return 'u16'},
-        get max() {return conf.max},
         get buf() { return buf },
+        get size() { return size },
+        get max() { return conf.max },
         get format() { return Format[format] },
 
         initBuffer( length: number ) {
+            size = length
             buf = new Uint16Array( length )
         },
 
