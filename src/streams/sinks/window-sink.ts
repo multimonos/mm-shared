@@ -1,4 +1,5 @@
 import { DataBroker } from "../broker";
+import { DataSink } from "./datasink";
 
 
 /**
@@ -14,11 +15,13 @@ export function createWindowSink( broker: DataBroker, {
 }: {
     size?: number; // width of the window in indices
     debug?: boolean;
-} = {} ) {
+} = {} ):DataSink<Uint8Array[]> {
 
-    // Data Channel
+    // Channels
     const data = new Map<number, Uint8Array[]>()
+    const meta = new Map<number, Record<string, unknown>>()
 
+    // Data channel
     broker.onData( ( packet, senderId ) => {
         const window = data.get( senderId ) || []
 
@@ -31,11 +34,7 @@ export function createWindowSink( broker: DataBroker, {
         data.set( senderId, window )
     } )
 
-
-    // Meta Channel
-    const meta = new Map<number, Record<string, unknown>>()
-
-    // Merge incoming meta with the old for each sender
+    // Meta Channel: Merge incoming meta with the old for each sender
     broker.onMeta( ( info, senderId ) => {
         let current = meta.get( senderId )
 
@@ -49,6 +48,21 @@ export function createWindowSink( broker: DataBroker, {
         debug && console.log( { meta: meta.get( senderId ) } )
     } )
 
-    return { data, meta }
+    function clearAll() {
+        data.clear()
+        meta.clear()
+    }
+
+    function clear(senderId:number){
+        data.delete(senderId)
+        meta.delete(senderId)
+    }
+
+    return {
+        data,
+        meta,
+        clearAll,
+        clear,
+    }
 }
 

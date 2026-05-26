@@ -1,4 +1,5 @@
-import {DataBroker} from "../broker";
+import { DataBroker } from "../broker";
+import { DataSink } from "./datasink";
 
 /**
  * Store a single vec for each sender only.
@@ -9,20 +10,18 @@ export function createSnapshotSink( broker: DataBroker, {
     debug = false
 }: {
     debug?: boolean
-} = {} ) {
-    // Data Channel : Raw bytes data from producer
+} = {} ): DataSink<Uint8Array> {
+
+    // Channles
     const data = new Map<number, Uint8Array>()
-
-    // Save only the latest packet
-    broker.onData( ( packet, senderId ) => {
-        data.set( senderId, packet )
-        // debug && console.log(`data: ${senderId}`,x)
-    } )
-
-    // Meta Channel : Application state via json
     const meta = new Map<number, Record<string, unknown>>()
 
-    // Merge incoming meta with the existing
+    // Data Channel : Raw bytes data from producer ... save only the latest packet
+    broker.onData( ( bytes, senderId ) => {
+        data.set( senderId, bytes )
+    } )
+
+    // Meta Channel : Application state via json ... merge incoming meta with the existing
     broker.onMeta( ( info, senderId ) => {
         let current = meta.get( senderId )
 
@@ -33,8 +32,24 @@ export function createSnapshotSink( broker: DataBroker, {
 
         Object.assign( current, info ) // Mutate existing instead of creating new
 
-        debug && console.log( senderId, meta.get( senderId ) )
+        debug && console.log( { senderId, meta: meta.get( senderId ) } )
     } )
 
-    return { data, meta }
+
+    function clearAll() {
+        data.clear()
+        meta.clear()
+    }
+
+    function clear( senderId: number ) {
+        data.delete( senderId )
+        meta.delete( senderId )
+    }
+
+    return {
+        data,
+        meta,
+        clearAll,
+        clear,
+    }
 }
