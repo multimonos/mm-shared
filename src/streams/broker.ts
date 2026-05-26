@@ -19,8 +19,8 @@ export interface DataBroker {
 }
 
 export function createDataBroker(): DataBroker {
-    let onDataCallback: (( bytes: Uint8Array, senderId: number ) => void) | null = null
-    let onMetaCallback: (( data: Record<string, unknown>, senderId: number ) => void) | null = null
+    const dataListeners = new Set<( bytes: Uint8Array, senderId: number ) => void>()
+    const metaListeners = new Set<( data: Record<string, unknown>, senderId: number ) => void>()
 
     return {
 
@@ -31,44 +31,43 @@ export function createDataBroker(): DataBroker {
         push( data, senderId = 0 ) {
             if ( data instanceof Uint8Array || data instanceof ArrayBuffer ) {
                 // only send uint8array
-                onDataCallback?.(
-                    data instanceof ArrayBuffer ? new Uint8Array( data ) : data,
-                    senderId
-                )
+                const bytes = data instanceof ArrayBuffer ? new Uint8Array( data ) : data
+                dataListeners.forEach( fn => fn( bytes, senderId ) )
+
             } else if ( typeof data === 'string' ) {
                 // send strings as meta
                 try {
-                    onMetaCallback?.( JSON.parse( data ), senderId )
+                    metaListeners.forEach( fn => fn( JSON.parse( data ), senderId ) )
                 } catch ( e ) {
                     console.warn( `Datastream got non-JSON string ... skipping data='${ data }'` )
                 }
             } else {
                 // meta send expects json
-                onMetaCallback?.( data, senderId )
+                metaListeners.forEach( fn => fn( data, senderId ) )
             }
         },
 
         sendData( bytes, senderId = 0 ) {
-            onDataCallback?.( bytes, senderId )
+            dataListeners.forEach( fn => fn( bytes, senderId ) )
         },
 
         sendMeta( data, senderId = 0 ) {
-            onMetaCallback?.( data, senderId )
+            metaListeners.forEach( fn => fn( data, senderId ) )
         },
 
         onData( fn ) {
-            onDataCallback = fn
+            dataListeners.add(fn)
 
             return () => {
-                if ( onDataCallback === fn ) onDataCallback = null;
+                dataListeners.delete( fn )
             }
         },
 
         onMeta( fn ) {
-            onMetaCallback = fn
+            metaListeners.add( fn )
 
             return () => {
-                if ( onMetaCallback === fn ) onMetaCallback = null;
+                metaListeners.delete( fn )
             }
         },
     }
