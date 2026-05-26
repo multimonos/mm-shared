@@ -1,5 +1,6 @@
 import type p5 from 'p5';
 
+/*
 declare global {
 
     // Notes
@@ -18,4 +19,10 @@ declare global {
         // Extend p5 with a destructor, so, we can cleanup our messes.
         destroy?(): void;
     }
+}
+*/
+
+export type P5 = p5 & {
+    // Extend p5 with a destructor, so, we can cleanup our messes.
+    destroy?(): void;
 }
