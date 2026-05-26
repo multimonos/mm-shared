@@ -23,19 +23,20 @@ export type CodecLayout = {
 export enum Format {
     unknown = 0xff,
 
-    raw_u8 = 0x1,
-    raw_u16 = 0x2,
+    raw_u8 = 0x1, // vector of N u8 ( raw values )
+    raw_u16 = 0x2, // vector of N u16 ( raw values )
+    raw_u16i = 0x3, // vector of N u16 tuples ( value, index )
 
-    audio_freq_u8 = 0x10,
-    audio_freq_u16 = 0x11,
+    audio_freq_u8 = 0x10, // vector of N db levels as u8
+    audio_freq_u16 = 0x11, // vector of N db levels as u16
 
-    audio_time_u8 = 0x20,
-    audio_time_u16 = 0x21,
+    audio_time_u8 = 0x20, // vector of N signed floats as u8
+    audio_time_u16 = 0x21, // vector N signed floats as u16
 
-    vec2_u8 = 0x30,
-    vec2_u16 = 0x31,
-    vec3_u8 = 0x32,
-    vec3_u16 = 0x33,
+    vec2_u8 = 0x30, // position vec2 as u8
+    vec2_u16 = 0x31, // position vec2 as u16
+    vec3_u8 = 0x32, // position vec3 as u8
+    vec3_u16 = 0x33,// position vec3 as u16
 }
 
 
@@ -52,6 +53,7 @@ export const Config: Record<Format, {
     [Format.unknown]: { format: Format.unknown, stride: 0, size: 0, ctor: null, max: null },
     [Format.raw_u8]: { format: Format.raw_u8, stride: 1, size: 1, ctor: Uint8Array, max: U8_MAX },
     [Format.raw_u16]: { format: Format.raw_u16, stride: 2, size: 2, ctor: Uint16Array, max: U16_MAX },
+    [Format.raw_u16i]: { format: Format.raw_u16, stride: 4, size: 2, ctor: Uint16Array, max: U16_MAX },
     [Format.audio_freq_u8]: { format: Format.audio_freq_u8, stride: 1, size: 1, ctor: Uint8Array, max: U8_MAX },
     [Format.audio_freq_u16]: { format: Format.audio_freq_u16, stride: 2, size: 2, ctor: Uint16Array, max: U16_MAX },
     [Format.audio_time_u8]: { format: Format.audio_time_u8, stride: 1, size: 1, ctor: Uint8Array, max: U8_MAX },
