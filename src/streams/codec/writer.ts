@@ -14,6 +14,8 @@ export interface CodecWriter {
     pack: () => Uint8Array;
     quant: ( v: number ) => number;
     squant: ( v: number ) => number;
+
+    destroy: () => void;
 }
 
 export type CodecWriterOptions = {
@@ -58,6 +60,10 @@ export function createCodecWriter(
             return pack( format, buf )
         },
 
+        destroy:()=>{
+            // @todo
+        }
+
     } as CodecWriter
 
     // U16
@@ -79,6 +85,9 @@ export function createCodecWriter(
             return pack( format, buf )
         },
 
+        destroy:()=>{
+            // @todo
+        }
     } as CodecWriter
 
     // Return the api

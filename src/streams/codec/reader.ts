@@ -19,6 +19,8 @@ export interface CodecReader {
     // un-mapping
     unorm: ( v: number ) => number;
     snorm: ( v: number ) => number;
+
+    destroy: () => void;
 }
 
 export function createCodecReader() {
@@ -97,6 +99,10 @@ export function createCodecReader() {
         read: ( bytes: Uint8Array, start: number ) => {
             return readBytes( bytes, start, layout.size )
         },
+
+        destroy:()=>{
+
+        }
 
     } as CodecReader
 }

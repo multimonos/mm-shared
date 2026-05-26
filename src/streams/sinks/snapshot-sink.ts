@@ -17,24 +17,25 @@ export function createSnapshotSink( broker: DataBroker, {
     const meta = new Map<number, Record<string, unknown>>()
 
     // Data Channel : Raw bytes data from producer ... save only the latest packet
-    broker.onData( ( bytes, senderId ) => {
-        data.set( senderId, bytes )
-    } )
+    const destroyDataHooks =
+        broker.onData( ( bytes, senderId ) => {
+            data.set( senderId, bytes )
+        } )
 
     // Meta Channel : Application state via json ... merge incoming meta with the existing
-    broker.onMeta( ( info, senderId ) => {
-        let current = meta.get( senderId )
+    const destroyMetaHooks =
+        broker.onMeta( ( info, senderId ) => {
+            let current = meta.get( senderId )
 
-        if ( ! current ) {
-            current = {}
-            meta.set( senderId, current )
-        }
+            if ( ! current ) {
+                current = {}
+                meta.set( senderId, current )
+            }
 
-        Object.assign( current, info ) // Mutate existing instead of creating new
+            Object.assign( current, info ) // Mutate existing instead of creating new
 
-        debug && console.log( { senderId, meta: meta.get( senderId ) } )
-    } )
-
+            debug && console.log( { senderId, meta: meta.get( senderId ) } )
+        } )
 
     function clearAll() {
         data.clear()
@@ -51,5 +52,11 @@ export function createSnapshotSink( broker: DataBroker, {
         meta,
         clearAll,
         clear,
+        destroy: () => {
+            data.clear()
+            meta.clear()
+            destroyDataHooks()
+            destroyMetaHooks()
+        }
     }
 }
