@@ -1,17 +1,24 @@
-import type { DataProducer } from "./producer"
+import type { DataProducer } from "../producer"
 
 export interface CompositeProducer extends DataProducer {
     register: ( producer: DataProducer ) => () => void;
+    readonly targets: Set<DataProducer>;
     clear: () => void;
 }
 
 export function createCompositeProducer( producers: DataProducer[] = [] ): CompositeProducer {
 
+    // Producers managed by this composite producer.
     const targets = new Set<DataProducer>();
 
+    // Add any producers.
     producers.forEach( producer => targets.add( producer ) )
 
+    setInterval( () => console.log( { targets } ), 3000 )
+
     return {
+
+        type: 'composite-producer',
 
         register( producer: DataProducer ) {
             targets.add( producer )
@@ -37,5 +44,9 @@ export function createCompositeProducer( producers: DataProducer[] = [] ): Compo
         sendMeta( meta ) {
             targets.forEach( target => target.sendMeta( meta ) )
         },
+
+        get targets() {
+            return targets
+        }
     }
 }

@@ -3,6 +3,9 @@ import { DataProducer } from "../producer";
 
 export function createLoopbackProducer( broker: DataBroker ): DataProducer {
     return {
+
+        type: 'loopback-producer',
+
         push( data ) {
             broker.push( data )
         },

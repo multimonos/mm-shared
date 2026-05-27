@@ -2,6 +2,9 @@
  * Interface only as different Transport methods must implement their own way of getting data to the broker.
  */
 export interface DataProducer {
+
+    type: string;
+
     /** Sends data via the broker... egress */
     push( data: Uint8Array | Record<string, unknown> | string ): void;
 
