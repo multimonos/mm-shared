@@ -1,5 +1,7 @@
 export interface DataBroker {
 
+    id: string;
+
     type: 'broker';
 
     /** Receives data ... ingress */
