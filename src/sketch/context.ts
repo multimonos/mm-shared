@@ -17,9 +17,12 @@ export type SketchFactoryContext = BaseSketchContext & {
     producer?: DataProducer
 }
 
+/** multimonos.com is the PlayerContext as of 25-may-2026 */
+export type PlayerContext = BaseSketchContext
 
 /** As a sketch we can assert which values we consume from the framework */
 export type SketchContext =
+    | PlayerContext
     | ConsumerContext
     | GeneratorContext
     | TransceiverContext

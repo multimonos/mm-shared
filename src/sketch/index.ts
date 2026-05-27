@@ -1,5 +1,6 @@
 export * from "./context"
 export * from "./meta"
+export * from "./meta-factory"
 export * from "./module"
 export * from "./role"
 export * from "./response"
