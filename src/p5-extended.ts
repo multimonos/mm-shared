@@ -1,3 +1,15 @@
+import type p5 from 'p5';
+
+export type P5 = p5 & {
+    // Extend p5 with a destructor, so, we can cleanup our messes.
+    destroy?(): void;
+}
+
+export type P5Constructor = typeof p5;
+
+
+// FAILED ATTEMPTS //
+
 
 /*
 declare global {
@@ -21,14 +33,6 @@ declare global {
 }
 */
 
-import type p5 from 'p5';
-
-export type P5 = p5 & {
-    // Extend p5 with a destructor, so, we can cleanup our messes.
-    destroy?(): void;
-}
-
-export type P5Constructor = typeof p5; //
 
 // import p5 from 'p5';
 //
