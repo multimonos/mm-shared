@@ -1,5 +1,5 @@
-import type P5 from "p5";
 import { AudioInputApi } from "../audio/audio-input";
+import { type P5 } from "../p5-extended"
 import { DataBroker } from "../streams/broker";
 import { DataProducer } from "../streams/producer";
 
@@ -8,7 +8,7 @@ export type SketchContext =
     | GeneratorContext
 
 type BaseSketchContext = {
-    p5: typeof P5;
+    p5: P5;
     canvas: HTMLElement;
     notify: SketchNotifier;
     audio?: AudioInputApi;

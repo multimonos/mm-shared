@@ -1,13 +1,20 @@
-
+/** SketchMeta */
 export type SketchMeta = {
     id: string;
+    type: SketchType,
     name: string;
+    description: string;
     status: 'publish' | 'draft';
+    params: SketchParams,
+    tags: string[];
     permissions: {
         microphone?: boolean;
     }
-    tags: string[];
 }
+
+/** Type */
+export type SketchType =
+    | 'p5js'
 
 /** Params */
 export type SketchParam =
