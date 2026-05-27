@@ -14,28 +14,28 @@ export type ParamChangeHandler = <P extends SketchParam>(
     newValue: ParamValueTypeMap[P['type']]
 ) => void
 
+/** Range */
 export type RangeParam = {
     type: 'range'
     id: string
     label: string
+    value: number
     min: number
     max: number
     step: number
-    value: number
 }
 
-export type SelectOptions = {
+/** Select */
+export type Option = {
     value: string
     label: string
 }
-
-export type SelectOptionFetcher = () => Promise<SelectOptions>
 
 export type SelectParam = {
     type: 'select'
     id: string
     label: string
-    value?:string
-    options: SelectOptions[] | SelectOptionFetcher
+    value?: string
+    options: Option[] | (() => Promise<Option[]>)
 }
 
