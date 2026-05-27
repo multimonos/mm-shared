@@ -1,4 +1,3 @@
-import type p5 from 'p5';
 
 /*
 declare global {
@@ -22,7 +21,23 @@ declare global {
 }
 */
 
+import type p5 from 'p5';
+
 export type P5 = p5 & {
     // Extend p5 with a destructor, so, we can cleanup our messes.
     destroy?(): void;
 }
+
+export type P5Constructor = typeof p5; //
+
+// import p5 from 'p5';
+//
+// // This injects 'destroy' directly into the official p5 class instance definition
+// declare module 'p5' {
+//     interface p5 {
+//         destroy?(): void;
+//     }
+// }
+
+// Export it as a clean alias if you still want to import { P5 } elsewhere
+// export type P5 = p5;
