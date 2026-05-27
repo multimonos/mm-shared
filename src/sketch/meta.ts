@@ -25,7 +25,7 @@ export type SketchParams = {
     [key: string]: SketchParam
 }
 
-export type ParamChangeHandler = {
+export type SketchParamChangeHandler = {
     ( param: RangeParam, newValue: number ): void;
     ( param: SelectParam, newValue: string ): void;
 }
