@@ -3,6 +3,9 @@ import { AudioInputApi } from "../audio/audio-input";
 import { DataBroker } from "../streams/broker";
 import { DataProducer } from "../streams/producer";
 
+export type SketchContext =
+    | ConsumerContext
+    | GeneratorContext
 
 type BaseSketchContext = {
     p5: typeof P5;
@@ -25,8 +28,6 @@ export type TransceiverContext = BaseSketchContext & {
     broker?: never;
     producer?: DataProducer | undefined;
 }
-
-export type SketchContext = ConsumerContext | GeneratorContext
 
 export type SketchNotifier = {
     loaded: ( p: P5 ) => void;
