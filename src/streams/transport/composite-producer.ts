@@ -14,7 +14,8 @@ export function createCompositeProducer( producers: DataProducer[] = [] ): Compo
     // Add any producers.
     producers.forEach( producer => targets.add( producer ) )
 
-    setInterval( () => console.log( { targets } ), 3000 )
+    // Logging
+    // setInterval( () => console.log( { targets } ), 3000 )
 
     return {
 
