@@ -1,4 +1,7 @@
 export interface DataBroker {
+
+    type: 'broker';
+
     /** Receives data ... ingress */
     push( data: Uint8Array | Record<string, unknown> | string, senderId?: number ): void;
 
@@ -18,11 +21,26 @@ export interface DataBroker {
     sendMeta( data: Record<string, unknown>, senderId?: number ): void;
 }
 
-export function createDataBroker(): DataBroker {
+export type BrokerOptions = {
+    id?: string;
+}
+
+export function createDataBroker( options: BrokerOptions = {} ): DataBroker {
+
     const dataListeners = new Set<( bytes: Uint8Array, senderId: number ) => void>()
     const metaListeners = new Set<( data: Record<string, unknown>, senderId: number ) => void>()
 
+
+    // Set or generate id.
+    const id = options.id === undefined
+        ? (typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString( 36 ).substring( 2, 11 ))
+        : options.id
+
+    // Api
     return {
+        id,
+
+        type: 'broker',
 
         canPush( data ): data is Uint8Array | string | Record<string, unknown> {
             return data instanceof Uint8Array || typeof data === 'string' || (typeof data === 'object' && data !== null)
@@ -56,7 +74,7 @@ export function createDataBroker(): DataBroker {
         },
 
         onData( fn ) {
-            dataListeners.add(fn)
+            dataListeners.add( fn )
 
             return () => {
                 dataListeners.delete( fn )
@@ -74,3 +92,8 @@ export function createDataBroker(): DataBroker {
 }
 
 
+function uniqueId(): string {
+    return typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString( 36 ).substring( 2, 11 ); // Fallback string
+}
