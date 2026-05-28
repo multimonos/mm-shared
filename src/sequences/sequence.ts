@@ -14,3 +14,14 @@ export type Sequence =
         length: number
         S: string
     }
+
+export type GetSequenceListResponse = {
+    data: Sequence[]
+    links: {
+        self: string
+    }
+}
+
+export type GetSequenceResponse = {
+    data: Sequence
+}
