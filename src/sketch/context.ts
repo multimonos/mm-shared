@@ -4,6 +4,7 @@ import { DataBroker } from "../streams/broker";
 import { DataProducer } from "../streams/producer";
 import type { SketchMeta } from "./meta";
 import type { ProgressStepper } from "./progress-stepper";
+import type { SketchRole } from "./role";
 
 /** Sketch Module : Every sketch implements this basic contract*/
 export interface SketchModule<C extends SketchFactoryContext = SketchFactoryContext> {
@@ -49,6 +50,7 @@ export type PlayerContext = BaseSketchFactoryContext & {
  * RECORDER SYSTEM
  */
 type BaseRecorderContext = BaseSketchFactoryContext & {
+    role?:SketchRole,
     audio?: AudioInputApi
 }
 
