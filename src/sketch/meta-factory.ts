@@ -12,7 +12,7 @@ export const defineSketchMeta = (
         usePagination = false,
         permissions = {},
         tags = [],
-        params = {}, // sketch params ... public api
+        params = {}, // sketch params ... public api for defining ui select, range, toggles etc ...
         variants = [],
     } ) => (
     {

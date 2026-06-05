@@ -1,4 +1,4 @@
-import type { SketchParams } from "./meta";
+import type { SketchParams } from "../sketch/meta";
 
 export type GetSketchListResponse = {
     data: SketchResponse[]

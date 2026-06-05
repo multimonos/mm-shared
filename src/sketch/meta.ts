@@ -27,6 +27,7 @@ export type SketchVariant = {
     name: string
     audioUrl: string
     isDefault: boolean
+    params?: Record<string,any> // use as passthru params for later access
 }
 
 /** Params */
