@@ -21,10 +21,10 @@ type BaseSketchFactoryContext = {
 }
 
 /** Dependencies */
-// export type SketchNotifier = {
-//     loaded: ( p: P5 ) => void;
-//     ended: ( p: P5 ) => void;
-// }
+export type PlayerNotifier = {
+    loaded: ( p: P5 ) => void;
+    ended: ( p: P5 ) => void;
+}
 
 
 /** Factory : As a factory we are just injecting dependencies from the framework */
@@ -45,6 +45,7 @@ type SketchFactoryContext = BaseSketchFactoryContext & {
 export type PlayerContext = BaseSketchFactoryContext & {
     progress: ProgressStepper
     audio: AudioPlayerApi
+    notify: PlayerNotifier
 }
 
 /**
