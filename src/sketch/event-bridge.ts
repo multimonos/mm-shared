@@ -1,7 +1,5 @@
-import type { P5 } from "../p5-extended";
-
 type SketchEvents = {
-    'sketch:loaded': ( p: P5 ) => void
+    'sketch:loaded': () => void
     'recorder:start': () => void
     'recorder:pause': () => void
 }
