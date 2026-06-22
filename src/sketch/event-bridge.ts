@@ -6,9 +6,19 @@ type SketchEvents = {
     'recorder:pause': () => void
 }
 
+
+export type SketchEventBridgOptions = {
+    debug?: boolean
+}
 export type SketchEventBridge = ReturnType<typeof createEventBridge>
 
-export function createEventBridge() {
+export function createEventBridge( options: Partial<SketchEventBridgOptions> = {} ) {
+
+    const {
+        debug = true
+    } = options
+
+    const log = ( ...args: any ) => debug && console.log( 'event-bridge:', ...args )
 
     // internal api is "loosely" typed, but, public api is not
     let listeners: { [event: string]: Array<( ...args: any[] ) => void> } = {}
@@ -31,6 +41,7 @@ export function createEventBridge() {
     }
 
     function emit<K extends keyof SketchEvents>( event: K, ...args: Parameters<SketchEvents[K]> ) {
+        log( 'emit', event )
         listeners[event]?.forEach( fn => fn( ...args ) )
     }
 
