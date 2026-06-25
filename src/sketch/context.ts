@@ -2,7 +2,8 @@ import type { AudioInputApi, AudioPlayerApi } from "../audio";
 import { type P5, type P5Constructor } from "../p5-extended"
 import { DataBroker } from "../streams/broker";
 import { DataProducer } from "../streams/producer";
-import type { SketchEventBridge } from "./event-bridge";
+import type { EventBus } from "../util/event-bus";
+import type { SketchEvents } from "./events";
 import type { SketchMeta } from "./meta";
 import type { ProgressStepper } from "./progress-stepper";
 import type { SketchRole } from "./role";
@@ -53,7 +54,7 @@ export type PlayerContext = BaseSketchFactoryContext & {
 type BaseRecorderContext = BaseSketchFactoryContext & {
     role?: SketchRole,
     audio?: AudioInputApi
-    bridge?: SketchEventBridge
+    bridge?: EventBus<SketchEvents>
 }
 
 /** Recorder : As a sketch we can assert which values we consume from the framework */
