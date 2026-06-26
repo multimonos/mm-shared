@@ -18,10 +18,10 @@ export function createEventBus<T extends EventBusEventMap>(
 ): EventBus<T> {
 
     const {
-        debug = true
+        debug = false
     } = options
 
-    const log = ( ...args: any ) => debug && console.log( 'event-bridge:', ...args )
+    const log = ( ...args: any ) => debug && console.log( 'event-bus:', ...args )
 
     // internal api is "loosely" typed, but, public api is not
     let listeners: { [event: string]: Array<( ...args: any[] ) => void> } = {}
