@@ -20,6 +20,7 @@ export interface CodecReader {
     unorm: ( v: number ) => number;
     snorm: ( v: number ) => number;
 
+    log: () => void;
     destroy: () => void;
 }
 
@@ -77,7 +78,7 @@ export function createCodecReader() {
             return layout.size ? buf.length / layout.size : 0
         },
 
-        /** nth term accessor */
+        /** nth term raw value accessor ... n -> [0, range] */
         nth: ( index: number ) => {
             // access simplified via the data view scavenger
             if ( ! layout.size ) return 0;
@@ -100,7 +101,15 @@ export function createCodecReader() {
             return readBytes( bytes, start, layout.size )
         },
 
-        destroy:()=>{
+        /** dump basic reader data */
+        log: () => {
+            console.log( 'CodecReader:', {
+                format: Format[layout.format],
+                layout,
+            } )
+        },
+
+        destroy: () => {
 
         }
 
